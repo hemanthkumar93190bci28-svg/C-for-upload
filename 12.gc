@@ -1,0 +1,38 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Definition for a Node provided by LeetCode.
+ * struct Node {
+ *     int val;
+ *     struct Node *next;
+ *     struct Node *random;
+ * };
+ */
+
+struct Node* copyRandomList(struct Node* head) {
+    if (head == NULL) {
+        return NULL;
+    }
+
+    struct Node* curr = head;
+
+    // Step 1: Interleave cloned nodes directly after original nodes
+    while (curr != NULL) {
+        struct Node* clone = (struct Node*)malloc(sizeof(struct Node));
+        clone->val = curr->val;
+        clone->next = curr->next;
+        clone->random = NULL;
+
+        curr->next = clone;
+        curr = clone->next;
+    }
+
+    // Step 2: Assign random pointers to the cloned nodes
+    curr = head;
+    while (curr != NULL) {
+        if (curr->random != NULL) {
+            curr->next->random = curr->random->next;
+        }
+        curr = curr->next->next;
+    }
