@@ -1,0 +1,54 @@
+#include <stdlib.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* twoSum(int* nums, int numsSize, int target, int* returnSize) {
+    int* result = (int*)malloc(2 * sizeof(int));
+    *returnSize = 2;
+
+    // Use a hash size that minimizes collisions
+    int hashSize = numsSize * 2;
+    if (hashSize < 50) hashSize = 50; // Ensure a minimum size
+
+    // Dynamically allocate hash arrays and zero them out using calloc
+    int* hashKeys = (int*)calloc(hashSize, sizeof(int));
+    int* hashValues = (int*)calloc(hashSize, sizeof(int));
+    int* hashUsed = (int*)calloc(hashSize, sizeof(int));
+
+    for (int i = 0; i < numsSize; i++) {
+        int complement = target - nums[i];
+        
+        // Search for the complement in the hash table
+        unsigned int hashIndex = abs(complement) % hashSize;
+        while (hashUsed[hashIndex]) {
+            if (hashKeys[hashIndex] == complement) {
+                result[0] = hashValues[hashIndex];
+                result[1] = i;
+                
+                free(hashKeys);
+                free(hashValues);
+                free(hashUsed);
+                return result;
+            }
+            hashIndex = (hashIndex + 1) % hashSize;
+        }
+
+        // Insert the current number and its index into the hash table
+        hashIndex = abs(nums[i]) % hashSize;
+        while (hashUsed[hashIndex]) {
+            hashIndex = (hashIndex + 1) % hashSize;
+        }
+        hashKeys[hashIndex] = nums[i];
+        hashValues[hashIndex] = i;
+        hashUsed[hashIndex] = 1;
+    }
+
+    // Fallback cleanup (though the problem guarantees exactly one solution)
+    free(hashKeys);
+    free(hashValues);
+    free(hashUsed);
+    *returnSize = 0;
+    return NULL;
+}
+
