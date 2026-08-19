@@ -1,0 +1,56 @@
+#include <stdbool.h>
+#include <stdlib.h>
+
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+
+// Helper function to build the tree recursively using range pointers
+struct TreeNode* buildTreeHelper(int* inorder, int inStart, int inEnd,
+                                 int* postorder, int postStart, int postEnd) {
+    // Base case: if range boundaries cross, no elements remain
+    if (inStart > inEnd || postStart > postEnd) {
+        return NULL;
+    }
+
+    // 1. The last element in postorder range is always the root node
+    struct TreeNode* root = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+    root->val = postorder[postEnd];
+    root->left = NULL;
+    root->right = NULL;
+
+    // 2. Locate the index of the root value within the inorder array
+    int rootIdx = inStart;
+    while (rootIdx <= inEnd) {
+        if (inorder[rootIdx] == root->val) {
+            break;
+        }
+        rootIdx++;
+    }
+
+    // 3. Count elements residing in the right subtree
+    int rightTreeSize = inEnd - rootIdx;
+
+    // 4. Recursively build right and left subtrees
+    // Right subtree uses elements up to postEnd - 1
+    root->right = buildTreeHelper(inorder, rootIdx + 1, inEnd,
+                                  postorder, postEnd - rightTreeSize, postEnd - 1);
+                                  
+    // Left subtree uses the remaining postorder elements on the left side
+    root->left = buildTreeHelper(inorder, inStart, rootIdx - 1,
+                                 postorder, postStart, postEnd - rightTreeSize - 1);
+
+    return root;
+}
+
+struct TreeNode* buildTree(int* inorder, int inorderSize, int* postorder, int postorderSize) {
+    if (inorderSize == 0 || postorderSize == 0) {
+        return NULL;
+    }
+    return buildTreeHelper(inorder, 0, inorderSize - 1, postorder, 0, postorderSize - 1);
+}
