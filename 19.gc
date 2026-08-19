@@ -1,0 +1,99 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <stdbool.h>
+
+#define HASH_SIZE 2048
+
+// Structure for the hash map node
+typedef struct HashNode {
+    char* key;
+    int index;
+    struct HashNode* next;
+} HashNode;
+
+// Simple polynomial rolling hash function for strings
+unsigned int hashFunction(const char* str) {
+    unsigned int hash = 0;
+    while (*str) {
+        hash = (hash * 31) + *str;
+        str++;
+    }
+    return hash % HASH_SIZE;
+}
+
+// Inserts a string and its index into the hash map
+void hashInsert(HashNode** hashTable, const char* key, int index) {
+    unsigned int slot = hashFunction(key);
+    HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
+    newNode->key = strdup(key);
+    newNode->index = index;
+    newNode->next = hashTable[slot];
+    hashTable[slot] = newNode;
+}
+
+// Searches for a string in the hash map and returns its index, or -1 if not found
+int hashSearch(HashNode** hashTable, const char* key) {
+    unsigned int slot = hashFunction(key);
+    HashNode* curr = hashTable[slot];
+    while (curr != NULL) {
+        if (strcmp(curr->key, key) == 0) {
+            return curr->index;
+        }
+        curr = curr->next;
+    }
+    return -1;
+}
+
+// Helper to free the hash map memory
+void freeHash(HashNode** hashTable) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        HashNode* curr = hashTable[i];
+        while (curr != NULL) {
+            HashNode* temp = curr;
+            curr = curr->next;
+            free(temp->key);
+            free(temp);
+        }
+    }
+}
+
+char** findRestaurant(char** list1, int list1Size, char** list2, int list2Size, int* returnSize) {
+    // Initialize the hash table to NULL pointers
+    HashNode* hashTable[HASH_SIZE] = { NULL };
+    
+    // Store all strings of list1 into the hash map
+    for (int i = 0; i < list1Size; i++) {
+        hashInsert(hashTable, list1[i], i);
+    }
+    
+    // Allocate space for the output array (at most the size of list2)
+    char** result = (char**)malloc(list2Size * sizeof(char*));
+    int resultCount = 0;
+    int minIndexSum = 200000; // Large initialization value
+    
+    // Iterate through list2 and match against the hash map
+    for (int j = 0; j < list2Size; j++) {
+        int i = hashSearch(hashTable, list2[j]);
+        if (i != -1) {
+            int currentIndexSum = i + j;
+            
+            if (currentIndexSum < minIndexSum) {
+                // Found a smaller index sum: clear previous records
+                minIndexSum = currentIndexSum;
+                resultCount = 0;
+                result[resultCount++] = strdup(list2[j]);
+            } else if (currentIndexSum == minIndexSum) {
+                // Found an equal minimum index sum: add to collection
+                result[resultCount++] = strdup(list2[j]);
+            }
+        }
+    }
+    
+    // Free map memory
+    freeHash(hashTable);
+    
+    *returnSize = resultCount;
+    return result;
+}
