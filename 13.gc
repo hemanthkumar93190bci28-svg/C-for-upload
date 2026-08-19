@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+
+bool wordBreak(char* s, char** wordDict, int wordDictSize) {
+    int n = strlen(s);
+    
+    // dp[i] will be true if s[0...i-1] can be segmented
+    bool dp[301] = {false}; 
+    dp[0] = true; // Base case: empty string
+
+    for (int i = 1; i <= n; i++) {
+        for (int j = 0; j < i; j++) {
+            // Check if prefix s[0...j-1] is valid
+            if (dp[j]) {
+                int len = i - j;
+                
+                // Compare substring s[j...i-1] with each dictionary word
+                for (int k = 0; k < wordDictSize; k++) {
+                    if ((int)strlen(wordDict[k]) == len && strncmp(s + j, wordDict[k], len) == 0) {
+                        dp[i] = true;
+                        break; // Valid segment found, stop looking for this i
+                    }
+                }
+            }
+            if (dp[i]) {
+                break; // Jump to the next i loop
+            }
+        }
+    }
+
+    return dp[n];
+}
