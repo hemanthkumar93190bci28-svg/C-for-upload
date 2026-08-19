@@ -1,0 +1,61 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+/**
+ * Definition for a Node provided by LeetCode.
+ * struct Node {
+ *     int val;
+ *     int numNeighbors;
+ *     struct Node** neighbors;
+ * };
+ */
+
+// Global or static tracker to store mapped clones (1-indexed based on node val <= 100)
+struct Node* visited[101];
+
+struct Node* dfsClone(struct Node* node) {
+    if (node == NULL) {
+        return NULL;
+    }
+
+    // If the node has already been cloned, return the cloned instance
+    if (visited[node->val] != NULL) {
+        return visited[node->val];
+    }
+
+    // 1. Allocate memory for the new cloned node
+    struct Node* cloneNode = (struct Node*)malloc(sizeof(struct Node));
+    cloneNode->val = node->val;
+    cloneNode->numNeighbors = node->numNeighbors;
+    
+    // 2. Map the original node's value to this fresh clone reference
+    visited[node->val] = cloneNode;
+
+    // 3. Allocate memory for the clone's neighbor pointer array
+    if (node->numNeighbors > 0) {
+        cloneNode->neighbors = (struct Node**)malloc(node->numNeighbors * sizeof(struct Node*));
+        
+        // 4. Recursively clone and populate each neighbor node connection
+        for (int i = 0; i < node->numNeighbors; i++) {
+            cloneNode->neighbors[i] = dfsClone(node->neighbors[i]);
+        }
+    } else {
+        cloneNode->neighbors = NULL;
+    }
+
+    return cloneNode;
+}
+
+struct Node* cloneGraph(struct Node* node) {
+    if (node == NULL) {
+        return NULL;
+    }
+    
+    // Reset our visited cache tracking array across separate execution test runs
+    for (int i = 0; i <= 100; i++) {
+        visited[i] = NULL;
+    }
+
+    return dfsClone(node);
+}
