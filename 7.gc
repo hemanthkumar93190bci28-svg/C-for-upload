@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Structure to pair the sorted key with its original string's index
+typedef struct {
+    char *sorted_str;
+    int original_idx;
+} WordPair;
+
+// Helper function to compare characters for qsort (sorting a single word)
+int compareChars(const void *a, const void *b) {
+    return (*(char *)a - *(char *)b);
+}
+
+// Helper function to compare WordPairs for qsort (grouping anagrams together)
+int comparePairs(const void *a, const void *b) {
+    return strcmp(((WordPair *)a)->sorted_str, ((WordPair *)b)->sorted_str);
+}
+
+char*** groupAnagrams(char** strs, int strsSize, int* returnSize, int** returnColumnSizes) {
+    if (strsSize == 0) {
+        *returnSize = 0;
+        return NULL;
+    }
+
+    // 1. Create and populate our WordPair array
+    WordPair* pairs = (WordPair*)malloc(strsSize * sizeof(WordPair));
+    for (int i = 0; i < strsSize; i++) {
+        pairs[i].original_idx = i;
+        pairs[i].sorted_str = strdup(strs[i]); // Duplicate string
+        
+        // Sort the individual string characters alphabetically to create the key
+        qsort(pairs[i].sorted_str, strlen(pairs[i].sorted_str), sizeof(char), compareChars);
+    }
+
+    // 2. Sort the pairs array based on the alphabetical keys.
+    // This forces all identical anagrams to sit directly next to each other.
+    qsort(pairs, strsSize, sizeof(WordPair), comparePairs);
+
+    // 3. Allocate memory for the final response structures
+    char*** result = (char***)malloc(strsSize * sizeof(char**));
+    *returnColumnSizes = (int*)malloc(strsSize * sizeof(int));
+    int groupCount = 0;
+
+    // 4. Iterate and group identical adjacent entries
+    int i = 0;
+    while (i < strsSize) {
+        int j = i;
+        // Count how many matching anagram keys follow
+        while (j < strsSize && strcmp(pairs[i].sorted_str, pairs[j].sorted_str) == 0) {
+            j++;
+        }
+        
+        int currentGroupSize = j - i;
+        result[groupCount] = (char**)malloc(currentGroupSize * sizeof(char*));
+        (*returnColumnSizes)[groupCount] = currentGroupSize;
+
+        // Fetch original unsorted strings back via their tracked original indices
+        for (int k = 0; k < currentGroupSize; k++) {
+            result[groupCount][k] = strs[pairs[i + k].original_idx];
+        }
+
+        groupCount++;
+        i = j; // Move index forward to the next distinct anagram signature
+    }
+
+    // Free temporarily allocated sorted keys
+    for (int i = 0; i < strsSize; i++) {
+        free(pairs[i].sorted_str);
+    }
+    free(pairs);
+
+    *returnSize = groupCount;
+    return result;
+}
