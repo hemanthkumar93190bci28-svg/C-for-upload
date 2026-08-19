@@ -1,0 +1,93 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
+// Definition for Trie Node
+typedef struct TrieNode {
+    struct TrieNode* children[26];
+    bool isEndOfWord;
+} TrieNode;
+
+// Helper function to create a new Trie Node
+TrieNode* createNode() {
+    TrieNode* newNode = (TrieNode*)malloc(sizeof(TrieNode));
+    newNode->isEndOfWord = false;
+    for (int i = 0; i < 26; i++) {
+        newNode->children[i] = NULL;
+    }
+    return newNode;
+}
+
+// Definition for the main Trie structure
+typedef struct {
+    TrieNode* root;
+} Trie;
+
+/** Initializes the trie object. */
+Trie* trieCreate() {
+    Trie* trie = (Trie*)malloc(sizeof(Trie));
+    trie->root = createNode();
+    return trie;
+}
+
+/** Inserts the string word into the trie. */
+void trieInsert(Trie* obj, char* word) {
+    if (obj == NULL || word == NULL) return;
+    
+    TrieNode* current = obj->root;
+    for (int i = 0; word[i] != '\0'; i++) {
+        int index = word[i] - 'a'; // Convert char to 0-25 index
+        
+        if (current->children[index] == NULL) {
+            current->children[index] = createNode();
+        }
+        current = current->children[index];
+    }
+    current->isEndOfWord = true;
+}
+
+/** Helper function to traverse the trie along a given string path */
+TrieNode* searchNode(Trie* obj, char* str) {
+    if (obj == NULL || str == NULL) return NULL;
+    
+    TrieNode* current = obj->root;
+    for (int i = 0; str[i] != '\0'; i++) {
+        int index = str[i] - 'a';
+        
+        if (current->children[index] == NULL) {
+            return NULL; // Path doesn't exist
+        }
+        current = current->children[index];
+    }
+    return current;
+}
+
+/** Returns true if the string word is in the trie, and false otherwise. */
+bool trieSearch(Trie* obj, char* word) {
+    TrieNode* node = searchNode(obj, word);
+    return node != NULL && node->isEndOfWord;
+}
+
+/** Returns true if there is a previously inserted string word that has the prefix prefix, and false otherwise. */
+bool trieStartsWith(Trie* obj, char* prefix) {
+    return searchNode(obj, prefix) != NULL;
+}
+
+/** Helper function to recursively free trie nodes from memory */
+void freeTrieNode(TrieNode* node) {
+    if (node == NULL) return;
+    for (int i = 0; i < 26; i++) {
+        if (node->children[i] != NULL) {
+            freeTrieNode(node->children[i]);
+        }
+    }
+    free(node);
+}
+
+/** Deallocates the trie and frees all its associated memory. */
+void trieFree(Trie* obj) {
+    if (obj == NULL) return;
+    freeTrieNode(obj->root);
+    free(obj);
+}
