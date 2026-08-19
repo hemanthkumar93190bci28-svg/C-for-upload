@@ -1,0 +1,62 @@
+#include <stdbool.h>
+#include <stdlib.h>
+
+// Helper function to calculate the next circular index
+int getNextIndex(int* nums, int numsSize, int currentIndex) {
+    // Calculate the jump, keeping it within bounds using modulo arithmetic
+    int nextIndex = (currentIndex + nums[currentIndex]) % numsSize;
+    
+    // Handle negative wrap-arounds in C modulo operations
+    if (nextIndex < 0) {
+        nextIndex += numsSize;
+    }
+    return nextIndex;
+}
+
+bool circularArrayLoop(int* nums, int numsSize) {
+    for (int i = 0; i < numsSize; i++) {
+        // Skip already processed nodes marked with 0
+        if (nums[i] == 0) continue;
+        
+        int slow = i;
+        int fast = i;
+        // Determine the initial direction: true for positive/forward, false for negative/backward
+        bool isForward = nums[i] > 0;
+        
+        while (true) {
+            // Move slow pointer 1 step
+            int nextSlow = getNextIndex(nums, numsSize, slow);
+            // Check direction change or a single-element cycle for the slow pointer
+            if ((nums[nextSlow] > 0) != isForward || nextSlow == slow) break;
+            slow = nextSlow;
+            
+            // Move fast pointer the first step
+            int nextFast1 = getNextIndex(nums, numsSize, fast);
+            if ((nums[nextFast1] > 0) != isForward || nextFast1 == fast) break;
+            
+            // Move fast pointer the second step
+            int nextFast2 = getNextIndex(nums, numsSize, nextFast1);
+            if ((nums[nextFast2] > 0) != isForward || nextFast2 == nextFast1) break;
+            fast = nextFast2;
+            
+            // If pointers meet, a valid cycle is detected
+            if (slow == fast) {
+                return true;
+            }
+        }
+        
+        // Optimization: Mark all connected nodes in this invalid path as 0
+        // so we never waste time re-evaluating them in outer loops
+        int marker = i;
+        while (true) {
+            int nextMarker = getNextIndex(nums, numsSize, marker);
+            if ((nums[nextMarker] > 0) != isForward || nums[marker] == 0) {
+                break;
+            }
+            nums[marker] = 0;
+            marker = nextMarker;
+        }
+    }
+    
+    return false;
+}
