@@ -1,0 +1,42 @@
+#include <stdlib.h>
+#include <limits.h>
+
+// Comparator function for qsort to sort elements in ascending order
+int compare(const void* a, const void* b) {
+    return (*(int*)a - *(int*)b);
+}
+
+int threeSumClosest(int* nums, int numsSize, int target) {
+    // Sort the array to efficiently apply the two-pointer approach
+    qsort(nums, numsSize, sizeof(int), compare);
+    
+    int closestSum = nums[0] + nums[1] + nums[2];
+    
+    for (int i = 0; i < numsSize - 2; i++) {
+        int left = i + 1;
+        int right = numsSize - 1;
+        
+        while (left < right) {
+            int currentSum = nums[i] + nums[left] + nums[right];
+            
+            // If we found an exact match, it cannot get any closer
+            if (currentSum == target) {
+                return currentSum;
+            }
+            
+            // Check if the current sum is closer to the target than our best record
+            if (abs(currentSum - target) < abs(closestSum - target)) {
+                closestSum = currentSum;
+            }
+            
+            // Move pointers depending on whether the current sum is too small or too large
+            if (currentSum < target) {
+                left++;
+            } else {
+                right--;
+            }
+        }
+    }
+    
+    return closestSum;
+}
