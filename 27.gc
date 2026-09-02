@@ -1,0 +1,80 @@
+#include <stdbool.h>
+#include <stdlib.h>
+
+// Definition for a hash map node
+typedef struct HashNode {
+    int key;
+    int index;
+    struct HashNode* next;
+} HashNode;
+
+// Simple absolute value function
+int absolute(int val) {
+    return val < 0 ? -val : val;
+}
+
+bool containsNearbyDuplicate(int* nums, int numsSize, int k) {
+    // Edge case optimization
+    if (numsSize <= 1 || k <= 0) {
+        return false;
+    }
+    
+    // Choose a prime number size for the hash table to reduce collisions
+    int tableSize = 20011; 
+    HashNode** hashTable = (HashNode**)calloc(tableSize, sizeof(HashNode*));
+    
+    for (int i = 0; i < numsSize; i++) {
+        // Compute hash index (handling negative values properly)
+        int hashIdx = nums[i] % tableSize;
+        if (hashIdx < 0) {
+            hashIdx += tableSize;
+        }
+        
+        // Search for the element in the chain
+        HashNode* curr = hashTable[hashIdx];
+        while (curr != NULL) {
+            if (curr->key == nums[i]) {
+                // If it matches and the distance condition is satisfied
+                if (i - curr->index <= k) {
+                    // Free allocated memory before returning
+                    for (int j = 0; j < tableSize; j++) {
+                        HashNode* tmp = hashTable[j];
+                        while (tmp != NULL) {
+                            HashNode* toFree = tmp;
+                            tmp = tmp->next;
+                            free(toFree);
+                        }
+                    }
+                    free(hashTable);
+                    return true;
+                }
+                // Update the index to the most recent one (always yields a smaller, optimal i - j)
+                curr->index = i;
+                break;
+            }
+            curr = curr->next;
+        }
+        
+        // If element was not found in the chain, insert a new node at the head
+        if (curr == NULL) {
+            HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
+            newNode->key = nums[i];
+            newNode->index = i;
+            newNode->next = hashTable[hashIdx];
+            hashTable[hashIdx] = newNode;
+        }
+    }
+    
+    // Clean up memory if no match is found
+    for (int j = 0; j < tableSize; j++) {
+        HashNode* tmp = hashTable[j];
+        while (tmp != NULL) {
+            HashNode* toFree = tmp;
+            tmp = tmp->next;
+            free(toFree);
+        }
+    }
+    free(hashTable);
+    
+    return false;
+}
