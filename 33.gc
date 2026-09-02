@@ -1,0 +1,68 @@
+#include <stdlib.h>
+
+// Comparator function for qsort to sort array elements in ascending order
+int compare(const void* a, const void* b) {
+    return (*(int*)a - *(int*)b);
+}
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both the returned array and *returnColumnSizes array must be malloced, assume caller calls free().
+ */
+int** threeSum(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {
+    // Sort the array to utilize the two-pointer approach and avoid duplicates
+    qsort(nums, numsSize, sizeof(int), compare);
+    
+    int capacity = 1024;
+    int** result = (int**)malloc(capacity * sizeof(int*));
+    *returnColumnSizes = (int*)malloc(capacity * sizeof(int));
+    int tripletCount = 0;
+    
+    for (int i = 0; i < numsSize - 2; i++) {
+        // Optimization: If the current smallest number is positive, 
+        // it's impossible to sum up to 0 with numbers to its right.
+        if (nums[i] > 0) break;
+        
+        // Skip duplicate values for the first element of the triplet
+        if (i > 0 && nums[i] == nums[i - 1]) continue;
+        
+        int left = i + 1;
+        int right = numsSize - 1;
+        
+        while (left < right) {
+            int sum = nums[i] + nums[left] + nums[right];
+            
+            if (sum == 0) {
+                // If we reach capacity limit, resize the result arrays
+                if (tripletCount >= capacity) {
+                    capacity *= 2;
+                    result = (int**)realloc(result, capacity * sizeof(int*));
+                    *returnColumnSizes = (int*)realloc(*returnColumnSizes, capacity * sizeof(int));
+                }
+                
+                // Allocate and store the matched triplet
+                result[tripletCount] = (int*)malloc(3 * sizeof(int));
+                result[tripletCount][0] = nums[i];
+                result[tripletCount][1] = nums[left];
+                result[tripletCount][2] = nums[right];
+                (*returnColumnSizes)[tripletCount] = 3;
+                tripletCount++;
+                
+                // Advance pointers and skip duplicates for left and right
+                while (left < right && nums[left] == nums[left + 1]) left++;
+                while (left < right && nums[right] == nums[right - 1]) right--;
+                
+                left++;
+                right--;
+            } else if (sum < 0) {
+                left++; // Sum is too low, move the left pointer to increase it
+            } else {
+                right--; // Sum is too high, move the right pointer to decrease it
+            }
+        }
+    }
+    
+    *returnSize = tripletCount;
+    return result;
+}
