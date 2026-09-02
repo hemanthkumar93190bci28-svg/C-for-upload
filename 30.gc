@@ -1,0 +1,125 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+// A simple structure for our hash map nodes to track remainder index positions
+typedef struct RemNode {
+    long long remainder;
+    int index;
+    struct RemNode* next;
+} RemNode;
+
+int getHashIndex(long long rem, int size) {
+    return (int)(rem % size);
+}
+
+// Function to find an existing remainder index in the hash map
+int findRemainder(RemNode** table, int size, long long rem) {
+    int idx = getHashIndex(rem, size);
+    RemNode* curr = table[idx];
+    while (curr != NULL) {
+        if (curr->remainder == rem) {
+            return curr->index;
+        }
+        curr = curr->next;
+    }
+    return -1; // Not found
+}
+
+// Function to insert a remainder index into the hash map
+void insertRemainder(RemNode** table, int size, long long rem, int strIdx) {
+    int idx = getHashIndex(rem, size);
+    RemNode* newNode = (RemNode*)malloc(sizeof(RemNode));
+    newNode->remainder = rem;
+    newNode->index = strIdx;
+    newNode->next = table[idx];
+    table[idx] = newNode;
+}
+
+char* fractionToDecimal(int numerator, int denominator) {
+    if (numerator == 0) {
+        char* zero = (char*)malloc(2 * sizeof(char));
+        strcpy(zero, "0");
+        return zero;
+    }
+
+    // Allocate buffer for the result string (Constraint guarantees < 10^4 length)
+    char* res = (char*)malloc(10005 * sizeof(char));
+    int resIdx = 0;
+
+    // Cast to long long to prevent integer overflow
+    long long num = numerator;
+    long long den = denominator;
+
+    // Handle the negative sign
+    if ((num < 0) ^ (den < 0)) {
+        res[resIdx++] = '-';
+    }
+
+    // Work with absolute values
+    num = llabs(num);
+    den = llabs(den);
+
+    // Compute integral part
+    long long integral = num / den;
+    resIdx += sprintf(res + resIdx, "%lld", integral);
+
+    long long remainder = num % den;
+    if (remainder == 0) {
+        res[resIdx] = '\0';
+        return res;
+    }
+
+    // Add decimal point
+    res[resIdx++] = '.';
+
+    // Initialize hash table to store fractional remainders
+    int tableSize = 2011;
+    RemNode** hashTable = (RemNode**)calloc(tableSize, sizeof(RemNode*));
+
+    bool loopFound = false;
+    int loopStartIdx = -1;
+
+    while (remainder != 0) {
+        // Look up if this remainder has already been seen
+        loopStartIdx = findRemainder(hashTable, tableSize, remainder);
+        if (loopStartIdx != -1) {
+            loopFound = true;
+            break;
+        }
+
+        // Record the current string index position before processing the remainder
+        insertRemainder(hashTable, tableSize, remainder, resIdx);
+
+        remainder *= 10;
+        res[resIdx++] = (remainder / den) + '0';
+        remainder %= den;
+    }
+
+    // If a repeating pattern is found, insert parentheses
+    if (loopFound) {
+        // Shift characters to the right by 1 to make room for '('
+        for (int i = resIdx; i >= loopStartIdx; i--) {
+            res[i + 1] = res[i];
+        }
+        res[loopStartIdx] = '(';
+        resIdx++;
+        res[resIdx++] = ')';
+    }
+
+    res[resIdx] = '\0';
+
+    // Cleanup hash map memory
+    for (int i = 0; i < tableSize; i++) {
+        RemNode* curr = hashTable[i];
+        while (curr != NULL) {
+            RemNode* tmp = curr;
+            curr = curr->next;
+            free(tmp);
+        }
+    }
+    free(hashTable);
+
+    return res;
+}
