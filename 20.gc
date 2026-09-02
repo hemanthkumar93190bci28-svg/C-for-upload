@@ -1,0 +1,48 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ * 
+ * Note: The structure above is already defined by LeetCode. 
+ * Do not uncomment it.
+ */
+
+struct ListNode* addTwoNumbers(struct ListNode* l1, struct ListNode* l2) {
+    // Creating a dummy node on the stack to easily build the list
+    struct ListNode dummy;
+    dummy.val = 0;
+    dummy.next = NULL;
+    
+    struct ListNode* curr = &dummy;
+    int carry = 0;
+    
+    // Loop until both lists are fully traversed and no carry remains
+    while (l1 != NULL || l2 != NULL || carry != 0) {
+        int val1 = (l1 != NULL) ? l1->val : 0;
+        int val2 = (l2 != NULL) ? l2->val : 0;
+        
+        // Calculate the sum of current digits and the previous carry
+        int total_sum = val1 + val2 + carry;
+        
+        carry = total_sum / 10;      // New carry for the next step
+        int new_digit = total_sum % 10; // Digit to store in the current node
+        
+        // Allocate memory for the new node
+        struct ListNode* new_node = (struct ListNode*)malloc(sizeof(struct ListNode));
+        new_node->val = new_digit;
+        new_node->next = NULL;
+        
+        // Link the new node to our result list and advance our pointer
+        curr->next = new_node;
+        curr = curr->next;
+        
+        // Move to the next nodes in the input lists if available
+        if (l1 != NULL) l1 = l1->next;
+        if (l2 != NULL) l2 = l2->next;
+    }
+    
+    // Return the actual head of the list, skipping the dummy node
+    return dummy.next;
+}
