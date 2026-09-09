@@ -1,0 +1,157 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Helper structure for Max and Min heaps
+typedef struct {
+    int* data;
+    int size;
+} Heap;
+
+// Main MedianFinder structure
+typedef struct {
+    Heap* maxHeap; // Stores the smaller half
+    Heap* minHeap; // Stores the larger half
+} MedianFinder;
+
+// Helper to create an individual heap
+Heap* createHeap(int capacity) {
+    Heap* h = (Heap*)malloc(sizeof(Heap));
+    h->data = (int*)malloc(capacity * sizeof(int));
+    h->size = 0;
+    return h;
+}
+
+void swap(int* a, int* b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+// Max-Heap operations
+void pushMaxHeap(Heap* h, int val) {
+    h->data[h->size] = val;
+    int curr = h->size;
+    h->size++;
+    while (curr > 0) {
+        int p = (curr - 1) / 2;
+        if (h->data[curr] > h->data[p]) {
+            swap(&h->data[curr], &h->data[p]);
+            curr = p;
+        } else {
+            break;
+        }
+    }
+}
+
+int popMaxHeap(Heap* h) {
+    int res = h->data[0];
+    h->size--;
+    h->data[0] = h->data[h->size];
+    int curr = 0;
+    while (2 * curr + 1 < h->size) {
+        int left = 2 * curr + 1;
+        int right = 2 * curr + 2;
+        int largest = left;
+        if (right < h->size && h->data[right] > h->data[left]) {
+            largest = right;
+        }
+        if (h->data[largest] > h->data[curr]) {
+            swap(&h->data[largest], &h->data[curr]);
+            curr = largest;
+        } else {
+            break;
+        }
+    }
+    return res;
+}
+
+// Min-Heap operations
+void pushMinHeap(Heap* h, int val) {
+    h->data[h->size] = val;
+    int curr = h->size;
+    h->size++;
+    while (curr > 0) {
+        int p = (curr - 1) / 2;
+        if (h->data[curr] < h->data[p]) {
+            swap(&h->data[curr], &h->data[p]);
+            curr = p;
+        } else {
+            break;
+        }
+    }
+}
+
+int popMinHeap(Heap* h) {
+    int res = h->data[0];
+    h->size--;
+    h->data[0] = h->data[h->size];
+    int curr = 0;
+    while (2 * curr + 1 < h->size) {
+        int left = 2 * curr + 1;
+        int right = 2 * curr + 2;
+        int smallest = left;
+        if (right < h->size && h->data[right] < h->data[left]) {
+            smallest = right;
+        }
+        if (h->data[smallest] < h->data[curr]) {
+            swap(&h->data[smallest], &h->data[curr]);
+            curr = smallest;
+        } else {
+            break;
+        }
+    }
+    return res;
+}
+
+// Initialize the MedianFinder object
+MedianFinder* medianFinderCreate() {
+    MedianFinder* obj = (MedianFinder*)malloc(sizeof(MedianFinder));
+    // Constraint states at most 50,000 calls will be made to addNum
+    obj->maxHeap = createHeap(50005);
+    obj->minHeap = createHeap(50005);
+    return obj;
+}
+
+// Adds an integer to the data structure
+void medianFinderAddNum(MedianFinder* obj, int num) {
+    // 1. Insert into the appropriate heap
+    if (obj->maxHeap->size == 0 || num <= obj->maxHeap->data[0]) {
+        pushMaxHeap(obj->maxHeap, num);
+    } else {
+        pushMinHeap(obj->minHeap, num);
+    }
+    
+    // 2. Rebalance the heaps so sizes differ by at most 1 element
+    // Max-heap is allowed to hold at most 1 more element than Min-heap
+    if (obj->maxHeap->size > obj->minHeap->size + 1) {
+        pushMinHeap(obj->minHeap, popMaxHeap(obj->maxHeap));
+    } else if (obj->minHeap->size > obj->maxHeap->size) {
+        pushMaxHeap(obj->maxHeap, popMinHeap(obj->minHeap));
+    }
+}
+
+// Returns the median of elements
+double medianFinderFindMedian(MedianFinder* obj) {
+    if (obj->maxHeap->size > obj->minHeap->size) {
+        return (double)obj->maxHeap->data[0];
+    } else {
+        return ((double)obj->maxHeap->data[0] + (double)obj->minHeap->data[0]) / 2.0;
+    }
+}
+
+// Deallocate memory
+void medianFinderFree(MedianFinder* obj) {
+    free(obj->maxHeap->data);
+    free(obj->maxHeap);
+    free(obj->minHeap->data);
+    free(obj->minHeap);
+    free(obj);
+}
+
+/**
+ * Your MedianFinder struct will be instantiated and called as such:
+ * MedianFinder* obj = medianFinderCreate();
+ * medianFinderAddNum(obj, num);
+ * double param_2 = medianFinderFindMedian(obj);
+ * medianFinderFree(obj);
+ */
