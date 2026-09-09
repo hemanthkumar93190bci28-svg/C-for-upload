@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+char* decodeString(char* s) {
+    int len = strlen(s);
+    
+    // Stacks to store multipliers and string pointers
+    int countStack[100];
+    char* stringStack[100];
+    int countTop = -1;
+    int stringTop = -1;
+    
+    // Allocate space for the running dynamic string
+    char* currentStr = (char*)malloc(100005 * sizeof(char));
+    currentStr[0] = '\0';
+    int currLen = 0;
+    
+    int i = 0;
+    while (i < len) {
+        if (isdigit(s[i])) {
+            int k = 0;
+            // Parse the full multi-digit integer k
+            while (isdigit(s[i])) {
+                k = k * 10 + (s[i] - '0');
+                i++;
+            }
+            countStack[++countTop] = k;
+        } 
+        else if (s[i] == '[') {
+            // Push the current string state to stack
+            stringStack[++stringTop] = strdup(currentStr);
+            // Reset currentStr for the upcoming inner context
+            currentStr[0] = '\0';
+            currLen = 0;
+            i++;
+        } 
+        else if (s[i] == ']') {
+            // Pop context
+            int repeatCount = countStack[countTop--];
+            char* prevStr = stringStack[stringTop--];
+            
+            // Generate the repeated substring inside a temporary buffer
+            char* temp = (char*)malloc(100005 * sizeof(char));
+            temp[0] = '\0';
+            
+            for (int r = 0; r < repeatCount; r++) {
+                strcat(temp, currentStr);
+            }
+            
+            // Reconstruct currentStr by joining the popped context with our repeated component
+            strcpy(currentStr, prevStr);
+            strcat(currentStr, temp);
+            currLen = strlen(currentStr);
+            
+            free(prevStr);
+            free(temp);
+            i++;
+        } 
+        else {
+            // Standard lowercase character
+            currentStr[currLen++] = s[i];
+            currentStr[currLen] = '\0';
+            i++;
+        }
+    }
+    
+    return currentStr;
+}
