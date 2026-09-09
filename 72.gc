@@ -1,0 +1,51 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+int calculate(char* s) {
+    int len = strlen(s);
+    if (len == 0) return 0;
+
+    // Allocate stack memory. In the worst case, we push at most len numbers.
+    int* stack = (int*)malloc(len * sizeof(int));
+    int top = -1;
+
+    long long currentNumber = 0;
+    char sign = '+';
+
+    for (int i = 0; i < len; i++) {
+        char c = s[i];
+
+        if (isdigit(c)) {
+            currentNumber = currentNumber * 10 + (c - '0');
+        }
+
+        // Process the operator when we hit a non-digit non-space character,
+        // or when we reach the end of the expression string.
+        if ((!isdigit(c) && c != ' ') || i == len - 1) {
+            if (sign == '+') {
+                stack[++top] = currentNumber;
+            } else if (sign == '-') {
+                stack[++top] = -currentNumber;
+            } else if (sign == '*') {
+                stack[top] = stack[top] * currentNumber;
+            } else if (sign == '/') {
+                stack[top] = stack[top] / currentNumber; // C implicitly truncates toward zero
+            }
+            
+            // Save the new operator and reset the parsed number
+            sign = c;
+            currentNumber = 0;
+        }
+    }
+
+    // Accumulate the final sum from the remaining elements in the stack
+    int result = 0;
+    for (int i = 0; i <= top; i++) {
+        result += stack[i];
+    }
+
+    free(stack);
+    return result;
+}
