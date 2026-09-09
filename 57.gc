@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <string.h>
+
+int getMaxRepetitions(char* s1, int n1, char* s2, int n2) {
+    int len1 = strlen(s1);
+    int len2 = strlen(s2);
+    
+    // Arrays to store history for cycle detection
+    // indexHistory[i] stores which block of s1 achieved index 'i' in s2
+    // countHistory[i] stores the total s2 matches up to that point
+    int indexHistory[105];
+    int countHistory[105];
+    
+    for (int i = 0; i <= len2; i++) {
+        indexHistory[i] = -1;
+        countHistory[i] = 0;
+    }
+    
+    int s2Idx = 0; // Current matching position inside s2
+    int s2Count = 0; // Total times s2 has been fully matched
+    
+    // Iterate through blocks of s1
+    for (int i = 0; i < n1; i++) {
+        for (int j = 0; j < len1; j++) {
+            if (s1[j] == s2[s2Idx]) {
+                s2Idx++;
+                if (s2Idx == len2) {
+                    s2Count++;
+                    s2Idx = 0;
+                }
+            }
+        }
+        
+        // Cycle detection check
+        if (indexHistory[s2Idx] != -1) {
+            int prevBlock = indexHistory[s2Idx];
+            int prevCount = countHistory[s2Idx];
+            
+            // Length of the cycle in terms of s1 blocks
+            int cycleLength = i - prevBlock;
+            // Number of s2 matches produced within one cycle
+            int cycleMatches = s2Count - prevCount;
+            
+            // Calculate remaining blocks after extracting cycles
+            int remainingBlocks = (n1 - 1 - prevBlock) % cycleLength;
+            int totalCycles = (n1 - 1 - prevBlock) / cycleLength;
+            
+            // Accumulate total counts from the cycles
+            s2Count = prevCount + totalCycles * cycleMatches;
+            
+            // Simulate the absolute remainder blocks manually
+            for (int k = 0; k < remainingBlocks; k++) {
+                for (int j = 0; j < len1; j++) {
+                    if (s1[j] == s2[s2Idx]) {
+                        s2Idx++;
+                        if (s2Idx == len2) {
+                            s2Count++;
+                            s2Idx = 0;
+                        }
+                    }
+                }
+            }
+            // Return total matches divided by the required n2 repetitions
+            return s2Count / n2;
+        }
+        
+        // Record history for the current state
+        indexHistory[s2Idx] = i;
+        countHistory[s2Idx] = s2Count;
+    }
+    
+    return s2Count / n2;
+}
