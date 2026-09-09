@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+char* simplifyPath(char* path) {
+    // Array to simulate a stack holding directory names
+    // Given path length constraint <= 3000, max possible components is 1500
+    char* stack[1500];
+    int top = 0;
+    
+    // Duplicate the path because strtok modifies the original string
+    char* pathCopy = strdup(path);
+    char* token = strtok(pathCopy, "/");
+    
+    while (token != NULL) {
+        if (strcmp(token, "..") == 0) {
+            // Pop from stack if we can go up a directory
+            if (top > 0) {
+                top--;
+            }
+        } else if (strcmp(token, ".") != 0 && strlen(token) > 0) {
+            // Push valid directory names to the stack
+            stack[top++] = token;
+        }
+        token = strtok(NULL, "/");
+    }
+    
+    // Allocate memory for the resulting canonical path
+    // Maximum required size is length of original path + 1 for null terminator
+    char* result = (char*)malloc(sizeof(char) * (strlen(path) + 2));
+    result[0] = '\0';
+    
+    // Reconstruct the path from the stack
+    if (top == 0) {
+        strcpy(result, "/");
+    } else {
+        for (int i = 0; i < top; i++) {
+            strcat(result, "/");
+            strcat(result, stack[i]);
+        }
+    }
+    
+    free(pathCopy);
+    return result;
+}
