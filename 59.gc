@@ -1,0 +1,53 @@
+#include <stdio.h>
+#include <string.h>
+
+int longestValidParentheses(char* s) {
+    int len = strlen(s);
+    if (len == 0) return 0;
+    
+    int maxLen = 0;
+    int left = 0, right = 0;
+    
+    // Pass 1: Scan from Left to Right
+    for (int i = 0; i < len; i++) {
+        if (s[i] == '(') {
+            left++;
+        } else {
+            right++;
+        }
+        
+        if (left == right) {
+            int currentLen = 2 * right;
+            if (currentLen > maxLen) {
+                maxLen = currentLen;
+            }
+        } else if (right > left) {
+            // Invalid state (e.g., more closing than opening), reset counters
+            left = right = 0;
+        }
+    }
+    
+    // Reset counters for the reverse pass
+    left = right = 0;
+    
+    // Pass 2: Scan from Right to Left
+    for (int i = len - 1; i >= 0; i--) {
+        if (s[i] == '(') {
+            left++;
+        } else {
+            right++;
+        }
+        
+        if (left == right) {
+            int currentLen = 2 * left;
+            if (currentLen > maxLen) {
+                maxLen = currentLen;
+            }
+        } else if (left > right) {
+            // Invalid state (e.g., more opening than closing), reset counters
+            left = right = 0;
+        }
+    }
+    
+    return maxLen;
+}
