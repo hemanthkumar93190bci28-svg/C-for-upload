@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+
+// Helper function to perform the recursive preorder traversal
+void preorderHelper(struct TreeNode* root, int* result, int* index) {
+    if (root == NULL) {
+        return;
+    }
+    
+    // 1. Visit the Root
+    result[(*index)++] = root->val;
+    
+    // 2. Traverse the Left Subtree
+    preorderHelper(root->left, result, index);
+    
+    // 3. Traverse the Right Subtree
+    preorderHelper(root->right, result, index);
+}
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* preorderTraversal(struct TreeNode* root, int* returnSize) {
+    // Allocate memory for the maximum possible nodes (constraint states max 100)
+    int* result = (int*)malloc(100 * sizeof(int));
+    int index = 0;
+    
+    // Perform the traversal
+    preorderHelper(root, result, &index);
+    
+    // Set the final count of elements for the caller
+    *returnSize = index;
+    
+    return result;
+}
