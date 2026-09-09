@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+// Helper function to reverse a linked list in-place
+struct ListNode* reverseList(struct ListNode* head) {
+    struct ListNode* prev = NULL;
+    struct ListNode* curr = head;
+    struct ListNode* nextNode = NULL;
+    
+    while (curr != NULL) {
+        nextNode = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = nextNode;
+    }
+    return prev;
+}
+
+bool isPalindrome(struct ListNode* head) {
+    if (head == NULL || head->next == NULL) {
+        return true;
+    }
+    
+    // Step 1: Find the middle of the list
+    struct ListNode* slow = head;
+    struct ListNode* fast = head;
+    
+    while (fast->next != NULL && fast->next->next != NULL) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    
+    // Step 2: Reverse the second half of the list
+    struct ListNode* secondHalfHead = reverseList(slow->next);
+    
+    // Step 3: Compare both halves
+    struct ListNode* p1 = head;
+    struct ListNode* p2 = secondHalfHead;
+    bool result = true;
+    
+    while (p2 != NULL) {
+        if (p1->val != p2->val) {
+            result = false;
+            break;
+        }
+        p1 = p1->next;
+        p2 = p2->next;
+    }
+    
+    // Optional: Restore the list structure by reversing it back
+    slow->next = reverseList(secondHalfHead);
+    
+    return result;
+}
