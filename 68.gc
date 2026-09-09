@@ -1,0 +1,68 @@
+#include <stdlib.h>
+#include <stdbool.h>
+
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+
+typedef struct {
+    struct TreeNode** stack;
+    int top;
+} BSTIterator;
+
+// Helper function to push all left children of a node onto the stack
+void pushAllLeft(BSTIterator* obj, struct TreeNode* node) {
+    while (node != NULL) {
+        obj->stack[++(obj->top)] = node;
+        node = node->left;
+    }
+}
+
+BSTIterator* bSTIteratorCreate(struct TreeNode* root) {
+    BSTIterator* obj = (BSTIterator*)malloc(sizeof(BSTIterator));
+    
+    // Constraints state max nodes = 10^5.
+    // In a skewed tree, max height H can be equal to N.
+    obj->stack = (struct TreeNode**)malloc(100005 * sizeof(struct TreeNode*));
+    obj->top = -1;
+    
+    // Initialize by pushing the root and all its left descendants
+    pushAllLeft(obj, root);
+    
+    return obj;
+}
+
+int bSTIteratorNext(BSTIterator* obj) {
+    // Pop the top node from the stack (this is the next smallest element)
+    struct TreeNode* node = obj->stack[(obj->top)--];
+    
+    // If the popped node has a right child, push its left branch
+    if (node->right != NULL) {
+        pushAllLeft(obj, node->right);
+    }
+    
+    return node->val;
+}
+
+bool bSTIteratorHasNext(BSTIterator* obj) {
+    // There are elements left if the stack is not empty
+    return obj->top != -1;
+}
+
+void bSTIteratorFree(BSTIterator* obj) {
+    free(obj->stack);
+    free(obj);
+}
+
+/**
+ * Your BSTIterator struct will be instantiated and called as such:
+ * BSTIterator* obj = bSTIteratorCreate(root);
+ * int param_1 = bSTIteratorNext(obj);
+ * bool param_2 = bSTIteratorHasNext(obj);
+ * bSTIteratorFree(obj);
+ */
