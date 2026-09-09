@@ -1,0 +1,50 @@
+#include <stdlib.h>
+
+typedef struct {
+    int* elements;
+    int* min_stack;
+    int top_idx;
+    int capacity;
+} MinStack;
+
+MinStack* minStackCreate() {
+    MinStack* obj = (MinStack*)malloc(sizeof(MinStack));
+    // Max operations on LeetCode for this problem can reach 3 * 10^4
+    obj->capacity = 30005; 
+    obj->elements = (int*)malloc(obj->capacity * sizeof(int));
+    obj->min_stack = (int*)malloc(obj->capacity * sizeof(int));
+    obj->top_idx = -1;
+    return obj;
+}
+
+void minStackPush(MinStack* obj, int val) {
+    obj->top_idx++;
+    obj->elements[obj->top_idx] = val;
+    
+    // If first element or smaller/equal to current min, track it
+    if (obj->top_idx == 0 || val <= obj->min_stack[obj->top_idx - 1]) {
+        obj->min_stack[obj->top_idx] = val;
+    } else {
+        obj->min_stack[obj->top_idx] = obj->min_stack[obj->top_idx - 1];
+    }
+}
+
+void minStackPop(MinStack* obj) {
+    if (obj->top_idx >= 0) {
+        obj->top_idx--;
+    }
+}
+
+int minStackTop(MinStack* obj) {
+    return obj->elements[obj->top_idx];
+}
+
+int minStackGetMin(MinStack* obj) {
+    return obj->min_stack[obj->top_idx];
+}
+
+void minStackFree(MinStack* obj) {
+    free(obj->elements);
+    free(obj->min_stack);
+    free(obj);
+}
