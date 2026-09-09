@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+/**
+ * // This is the interface that allows for creating nested lists.
+ * // You should not implement it, or speculate about its implementation
+ * struct NestedInteger;
+ *
+ * bool NestedIntegerIsInteger(struct NestedInteger *);
+ * int NestedIntegerGetInteger(struct NestedInteger *);
+ * struct NestedInteger **NestedIntegerGetList(struct NestedInteger *);
+ * int NestedIntegerGetListSize(struct NestedInteger *);
+ */
+
+struct NestedIterator {
+    int* flatArray;
+    int index;
+    int size;
+};
+
+// Helper function to recursively traverse and flatten the nested list structure
+void flatten(struct NestedInteger** list, int size, int** flatArray, int* capacity, int* count) {
+    for (int i = 0; i < size; i++) {
+        if (NestedIntegerIsInteger(list[i])) {
+            // Resize buffer if capacity is reached
+            if (*count >= *capacity) {
+                *capacity *= 2;
+                *flatArray = (int*)realloc(*flatArray, (*capacity) * sizeof(int));
+            }
+            (*flatArray)[(*count)++] = NestedIntegerGetInteger(list[i]);
+        } else {
+            // Element is a list; recursively flatten it
+            struct NestedInteger** subList = NestedIntegerGetList(list[i]);
+            int subSize = NestedIntegerGetListSize(list[i]);
+            flatten(subList, subSize, flatArray, capacity, count);
+        }
+    }
+}
+
+// Initializer function
+struct NestedIterator* nestedIterCreate(struct NestedInteger** nestedList, int nestedListSize) {
+    struct NestedIterator* iter = (struct NestedIterator*)malloc(sizeof(struct NestedIterator));
+    
+    int capacity = 500; // Initial allocation size
+    iter->flatArray = (int*)malloc(capacity * sizeof(int));
+    iter->size = 0;
+    iter->index = 0;
+    
+    // Flatten the input list completely into flatArray
+    flatten(nestedList, nestedListSize, &(iter->flatArray), &capacity, &(iter->size));
+    
+    return iter;
+}
+
+// Renamed to nestedIterNext to match the test driver
+int nestedIterNext(struct NestedIterator* iter) {
+    return iter->flatArray[(iter->index)++];
+}
+
+// Renamed to nestedIterHasNext to match the test driver
+bool nestedIterHasNext(struct NestedIterator* iter) {
+    return iter->index < iter->size;
+}
+
+// Renamed to nestedIterFree to match the test driver
+void nestedIterFree(struct NestedIterator* iter) {
+    free(iter->flatArray);
+    free(iter);
+}
